@@ -1,80 +1,104 @@
 package chunks
 
 import (
+	"encoding/binary"
+	"fmt"
+	"pngme/chunk_type"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestChunkTypeFromBytes(t *testing.T) {
-	expected := [4]int{82, 117, 83, 116}
+func CreateTestChunk() Chunk {
+	dataLen := 42
+	chunkTypeAsBytes := []byte("RuSt")
+	messageAsBytes := []byte("This is where your secret message will be!")
+	crc := 2882656334
 
-	actual, _ := ChunkTypeFromBytes([4]int{82, 117, 83, 116})
+	lenAsBytes := make([]byte, 4)
+	binary.BigEndian.PutUint32(lenAsBytes, uint32(dataLen))
 
-	assert.Equal(t, expected, actual.bytes(), "Should be equal")
+	crcAsBytes := make([]byte, 4)
+	binary.BigEndian.PutUint32(crcAsBytes, uint32(crc))
 
+	amnt := 12 + dataLen
+
+	chunkDataAsBytes := make([]byte, amnt)
+
+	copy(chunkDataAsBytes[0:4], lenAsBytes)
+	copy(chunkDataAsBytes[4:8], chunkTypeAsBytes)
+	copy(chunkDataAsBytes[8:8+dataLen], messageAsBytes)
+	copy(chunkDataAsBytes[8+dataLen:], crcAsBytes)
+
+	return ChunkFromBytes(chunkDataAsBytes)
 }
 
-func TestChunkTypeFromString(t *testing.T) {
-	expected := [4]int{82, 117, 83, 116}
+func TestNewChunk(t *testing.T) {
+	chunkType, _ := chunk_type.ChunkTypeFromString("RuSt")
+	data := []byte("This is where your secret message will be!")
+	chunk := ChunkNew(chunkType, data)
 
-	actual, _ := ChunkTypeFromString("RuSt")
-
-	assert.Equal(t, expected, actual.bytes(), "Should be equal")
+	assert.Equal(t, 42, chunk.length(), "Chunk length should be 42")
+	assert.Equal(t, 2882656334, chunk.crc(), "Chunk CRC should be 2882656334")
 }
 
-func TestChunkTypeIsCritical(t *testing.T) {
-	chunk, _ := ChunkTypeFromString("RuSt")
-	assert.True(t, chunk.isCritical(), "isCritical() should be true")
+func TestChunkLenght(t *testing.T) {
+	chunk := CreateTestChunk()
+	assert.Equal(t, 42, chunk.length(), "Chunk data length should be 42")
 }
 
-func TestChunkTypeIsNotCritical(t *testing.T) {
-	chunk, _ := ChunkTypeFromString("ruSt")
-	assert.False(t, chunk.isCritical(), "isCritical() should be false")
+func TestChunkType(t *testing.T) {
+	chunk := CreateTestChunk()
+	assert.Equal(t, "RuSt", chunk.chunkType().ToString(), "Chunk type should be \"RuSt\"")
 }
 
-func TestChunkTypeIsPublic(t *testing.T) {
-	chunk, _ := ChunkTypeFromString("RUSt")
-	assert.True(t, chunk.isPublic(), "isPublic() should be true")
-}
+func TestChunkString(t *testing.T) {
+	chunk := CreateTestChunk()
+	chunkString := chunk.dataAsString()
+	excpectedChunkString := "This is where your secret message will be!"
 
-func TestChunkTypeIsNotPublic(t *testing.T) {
-	chunk, _ := ChunkTypeFromString("RuSt")
-	assert.False(t, chunk.isPublic(), "isPublic() should be false")
-}
-
-func TestChunkTypeIsReservedBitValid(t *testing.T) {
-	chunk, _ := ChunkTypeFromString("RUSt")
-	assert.True(t,
-		chunk.isReservedBitValid(),
-		"isReservedBitValid() should be true",
+	assert.Equal(t,
+		excpectedChunkString,
+		chunkString,
+		fmt.Sprintf("Chunk string should be \"%s\"", excpectedChunkString),
 	)
 }
 
-func TestChunkTypeIsNotReservedBitValid(t *testing.T) {
-	chunk, _ := ChunkTypeFromString("Rust")
-	assert.False(t,
-		chunk.isReservedBitValid(),
-		"isReservedBitValid() should be false",
-	)
+func TestChunkCrc(t *testing.T) {
+	chunk := CreateTestChunk()
+	assert.Equal(t, 2882656334, chunk.crc(), "Chunk Crc should be 2882656334")
 }
 
-func TestChunkTypeIsSafeToCopy(t *testing.T) {
-	chunk, _ := ChunkTypeFromString("RUSt")
-	assert.True(t, chunk.isSafeToCopy(), "isSafeToCopy() should be true")
+func TestValidChunkFromBytes(t *testing.T) {
+	dataLen := 42
+	chunkTypeAsBytes := []byte("RuSt")
+	messageAsBytes := []byte("This is where your secret message will be!")
+	crc := 2882656334
+
+	lenAsBytes := make([]byte, 4)
+	binary.BigEndian.PutUint32(lenAsBytes, uint32(dataLen))
+
+	crcAsBytes := make([]byte, 4)
+	binary.BigEndian.PutUint32(crcAsBytes, uint32(crc))
+
+	amnt := 12 + dataLen
+
+	chunkDataAsBytes := make([]byte, amnt)
+
+	copy(chunkDataAsBytes[0:4], lenAsBytes)
+	copy(chunkDataAsBytes[4:8], chunkTypeAsBytes)
+	copy(chunkDataAsBytes[8:8+dataLen], messageAsBytes)
+	copy(chunkDataAsBytes[8+dataLen:], crcAsBytes)
+
+	chunk := ChunkFromBytes(chunkDataAsBytes)
+
+	chunkString := chunk.dataAsString()
+	expectedChunkString := "This is where your secret message will be!"
+
+	assert.Equal(t, 42, chunk.length(), "Chunk length should be 42")
+	assert.Equal(t, "RuSt", chunk.chunkType().ToString(), "Chunk type should be \"RuSt\"")
+	assert.Equal(t, expectedChunkString, chunkString, fmt.Sprintf("Chunk message should be \"%s\"", expectedChunkString))
+	assert.Equal(t, crc, chunk.crc(), fmt.Sprintf("Chunk Crc should be %d", crc))
 }
 
-func TestChunkTypeIsUnsafeToCopy(t *testing.T) {
-	chunk, _ := ChunkTypeFromString("RuST")
-	assert.False(t, chunk.isSafeToCopy(), "isSafeToCopy() should be false")
-}
-
-func TestValidChunkTypeIsValid(t *testing.T) {
-	chunk, _ := ChunkTypeFromString("RUSt")
-	assert.True(t, chunk.isValid(), "isValid() should be true")
-}
-
-func TestInvalidChunkTypeIsNotValid(t *testing.T) {
-	chunk, _ := ChunkTypeFromString("Ru1t")
-	assert.False(t, chunk.isValid(), "isValid() should be false")
-}
+// TODO: Test invalid chunks

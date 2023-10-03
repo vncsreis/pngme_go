@@ -1,124 +1,118 @@
 package chunks
 
 import (
-	"errors"
+	"encoding/binary"
+	"hash/crc32"
+	"pngme/chunk_type"
 )
 
-const LOWERCASE_LOW = 97
-const LOWERCASE_HIGH = 122
-const UPPERCASE_LOW = 65
-const UPPERCASE_HIGH = 90
-
-type Case uint8
-
-const (
-	Upper Case = 0
-	Lower Case = 1
-)
-
-type ChunkType struct {
-	b                [4]int
-	valid            bool
-	critical         bool
-	public           bool
-	reservedBitValid bool
-	safeToCopy       bool
+type Chunk struct {
+	cLen  uint32
+	cType chunk_type.ChunkType
+	cData []byte
+	cCrc  uint32
 }
 
-func (c *ChunkType) isValid() bool {
-	return c.valid
+func (c *Chunk) dataAsString() string {
+	return string(c.cData)
 }
 
-func (c *ChunkType) isCritical() bool {
-	return c.critical
+func (c *Chunk) asBytes() []byte {
+	return c.cData
 }
 
-func (c *ChunkType) isPublic() bool {
-	return c.public
+func (c *Chunk) length() int {
+	return int(c.cLen)
 }
 
-func (c *ChunkType) isReservedBitValid() bool {
-	return c.reservedBitValid
+func (c *Chunk) chunkType() *chunk_type.ChunkType {
+	return &c.cType
 }
 
-func (c *ChunkType) isSafeToCopy() bool {
-	return c.safeToCopy
+func (c *Chunk) data() *[]byte {
+	return &c.cData
 }
 
-func (c *ChunkType) bytes() [4]int {
-	return c.b
+func (c *Chunk) crc() int {
+	return int(c.cCrc)
+}
+func ChunkNew(chunkType chunk_type.ChunkType, data []byte) Chunk {
+	newChunk := Chunk{}
+
+	dataLen := uint32(len(data))
+	newChunk.cLen = dataLen
+
+	newChunk.cType = chunkType
+	newChunk.cData = data
+	newChunk.cCrc = chunkCrc(chunkType, data)
+
+	return newChunk
 }
 
-func ChunkTypeFromBytes(bytes [4]int) (ChunkType, error) {
-	new_chunk_type := ChunkType{}
+func chunkCrc(chunkType chunk_type.ChunkType, data []byte) uint32 {
+	dataLen := uint32(len(data))
+	crcTarget := make([]byte, 4+dataLen)
+	chunkTypeAsBytes := chunkType.Bytes()
 
-	new_chunk_type.valid = true
+	copy(crcTarget[0:4], chunkTypeAsBytes[:])
+	copy(crcTarget[4:], data)
 
-	for index, byte := range bytes {
+	crcAsBytes := make([]byte, 4)
 
-		char_case, err := low_or_uppercase(byte)
+	binary.BigEndian.PutUint32(crcAsBytes, crc32.ChecksumIEEE(crcTarget))
 
-		if err != nil {
-			new_chunk_type.valid = false
+	return binary.BigEndian.Uint32(crcAsBytes)
+}
 
-			new_chunk_type.b = [4]int{0, 0, 0, 0}
-			new_chunk_type.critical = false
-			new_chunk_type.reservedBitValid = false
-			new_chunk_type.public = false
-			new_chunk_type.safeToCopy = false
+func ChunkFromBytes(data []byte) Chunk {
+	dataLenB := make([]byte, 4)
+	copy(dataLenB, data[0:4])
+	dataLen := binary.BigEndian.Uint32(dataLenB)
 
-			return new_chunk_type, errors.New("Invalid byte")
-		}
-
-		new_chunk_type.b[index] = byte
-		switch index {
-		case 0:
-			if char_case == Upper {
-				new_chunk_type.critical = true
-			} else {
-				new_chunk_type.critical = false
-			}
-		case 1:
-			if char_case == Upper {
-				new_chunk_type.public = true
-			} else {
-				new_chunk_type.public = false
-			}
-		case 2:
-			if char_case == Upper {
-				new_chunk_type.reservedBitValid = true
-			} else {
-				new_chunk_type.reservedBitValid = false
-			}
-		case 3:
-			if char_case == Upper {
-				new_chunk_type.safeToCopy = false
-			} else {
-				new_chunk_type.safeToCopy = true
-			}
-		}
-
+	chunkTypeB := make([]byte, 4)
+	copy(chunkTypeB, data[4:8])
+	chunkType, err := chunk_type.ChunkTypeFromBytes([4]byte(chunkTypeB))
+	if err != nil {
+		panic("error")
 	}
 
-	return new_chunk_type, nil
+	dataB := make([]byte, dataLen)
+	copy(dataB, data[8:dataLen+8])
+
+	crcB := make([]byte, 4)
+	copy(crcB, data[dataLen+8:])
+	crc := binary.BigEndian.Uint32(crcB)
+
+	newChunk := Chunk{}
+
+	newChunk.cLen = dataLen
+	newChunk.cType = chunkType
+	newChunk.cData = dataB
+	newChunk.cCrc = crc
+
+	return newChunk
 }
 
-func ChunkTypeFromString(str string) (ChunkType, error) {
-	int_arr := [4]int{}
+// func ChunkNew(chunkType chunk_type.ChunkType, data []byte) Chunk {
+// 	dataLen := uint32(len(data))
+// 	dataLenAsBytes := make([]byte, 4)
+// 	binary.BigEndian.PutUint32(dataLenAsBytes, dataLen)
 
-	for index, char := range str {
-		int_arr[index] = int(char)
-	}
+// 	crcTarget := make([]byte, 4+dataLen)
+// 	chunkTypeAsBytes := chunkType.Bytes()
 
-	return ChunkTypeFromBytes(int_arr)
-}
+// 	copy(crcTarget[0:4], chunkTypeAsBytes[:])
+// 	copy(crcTarget[4:], data)
 
-func low_or_uppercase(num int) (Case, error) {
-	if num >= LOWERCASE_LOW && num <= LOWERCASE_HIGH {
-		return Lower, nil
-	} else if num >= UPPERCASE_LOW && num <= UPPERCASE_HIGH {
-		return Upper, nil
-	} else {
-		return 2, errors.New("Invalid case number")
-	}
-}
+// 	crcAsBytes := make([]byte, 4)
+
+// 	binary.BigEndian.PutUint32(crcAsBytes, crc32.ChecksumIEEE(crcTarget))
+
+// 	chunkData := make([]byte, 12+dataLen)
+
+// 	copy(chunkData[0:4], dataLenAsBytes)
+// 	copy(chunkData[4:8], chunkTypeAsBytes[:])
+// 	copy(chunkData[8:8+dataLen], data)
+// 	copy(chunkData[8+dataLen:], crcAsBytes)
+
+// }
