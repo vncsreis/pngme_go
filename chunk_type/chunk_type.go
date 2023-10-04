@@ -17,94 +17,70 @@ const (
 )
 
 type ChunkType struct {
-	b                [4]byte
-	valid            bool
-	critical         bool
-	public           bool
-	reservedBitValid bool
-	safeToCopy       bool
-}
-
-func (c *ChunkType) IsValid() bool {
-	return c.valid
-}
-
-func (c *ChunkType) IsCritical() bool {
-	return c.critical
-}
-
-func (c *ChunkType) IsPublic() bool {
-	return c.public
-}
-
-func (c *ChunkType) IsReservedBitValid() bool {
-	return c.reservedBitValid
-}
-
-func (c *ChunkType) IsSafeToCopy() bool {
-	return c.safeToCopy
-}
-
-func (c *ChunkType) Bytes() [4]byte {
-	return c.b
+	Bytes            [4]byte
+	Valid            bool
+	Critical         bool
+	Public           bool
+	ReservedBitValid bool
+	SafeToCopy       bool
 }
 
 func (c *ChunkType) ToString() string {
 	str := ""
 
-	for _, char := range c.b {
+	for _, char := range c.Bytes {
 		str += string(rune(char))
 	}
 
 	return str
 }
 
-func ChunkTypeFromBytes(bytes [4]byte) (ChunkType, error) {
+func FromBytes(bytes [4]byte) (ChunkType, error) {
 	new_chunk_type := ChunkType{}
 
-	new_chunk_type.valid = true
+	new_chunk_type.Valid = true
 
 	for index, b := range bytes {
 
 		char_case, err := low_or_uppercase(b)
 
 		if err != nil {
-			new_chunk_type.valid = false
+			new_chunk_type.Valid = false
 
-			new_chunk_type.b = [4]byte{0, 0, 0, 0}
-			new_chunk_type.critical = false
-			new_chunk_type.reservedBitValid = false
-			new_chunk_type.public = false
-			new_chunk_type.safeToCopy = false
+			new_chunk_type.Bytes = [4]byte{0, 0, 0, 0}
+			new_chunk_type.Critical = false
+			new_chunk_type.ReservedBitValid = false
+			new_chunk_type.Public = false
+			new_chunk_type.SafeToCopy = false
 
 			return new_chunk_type, errors.New("Invalid byte")
 		}
 
-		new_chunk_type.b[index] = b
+		new_chunk_type.Bytes[index] = b
 		switch index {
 		case 0:
 			if char_case == Upper {
-				new_chunk_type.critical = true
+				new_chunk_type.Critical = true
 			} else {
-				new_chunk_type.critical = false
+				new_chunk_type.Critical = false
 			}
 		case 1:
 			if char_case == Upper {
-				new_chunk_type.public = true
+				new_chunk_type.Public = true
 			} else {
-				new_chunk_type.public = false
+				new_chunk_type.Public = false
 			}
 		case 2:
 			if char_case == Upper {
-				new_chunk_type.reservedBitValid = true
+				new_chunk_type.ReservedBitValid = true
 			} else {
-				new_chunk_type.reservedBitValid = false
+				new_chunk_type.ReservedBitValid = false
 			}
 		case 3:
 			if char_case == Upper {
-				new_chunk_type.safeToCopy = false
+				new_chunk_type.SafeToCopy = false
 			} else {
-				new_chunk_type.safeToCopy = true
+				new_chunk_type.SafeToCopy = true
 			}
 		}
 
@@ -113,14 +89,18 @@ func ChunkTypeFromBytes(bytes [4]byte) (ChunkType, error) {
 	return new_chunk_type, nil
 }
 
-func ChunkTypeFromString(str string) (ChunkType, error) {
+func FromString(str string) (ChunkType, error) {
 	byteArr := [4]byte{}
 
 	for index, char := range str {
 		byteArr[index] = byte(char)
 	}
 
-	return ChunkTypeFromBytes(byteArr)
+	return FromBytes(byteArr)
+}
+
+func New(str string) (ChunkType, error) {
+	return FromString(str)
 }
 
 func low_or_uppercase(num byte) (Case, error) {

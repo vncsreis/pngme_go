@@ -8,86 +8,86 @@ import (
 func TestChunkTypeFromBytes(t *testing.T) {
 	expected := [4]byte{82, 117, 83, 116}
 
-	actual, _ := ChunkTypeFromBytes([4]byte{82, 117, 83, 116})
+	actual, _ := FromBytes([4]byte{82, 117, 83, 116})
 
-	assert.Equal(t, expected, actual.Bytes(), "Should be equal")
+	assert.Equal(t, expected, actual.Bytes, "Should be equal")
 
 }
 
 func TestChunkTypeFromString(t *testing.T) {
 	expected := [4]byte{82, 117, 83, 116}
 
-	actual, _ := ChunkTypeFromString("RuSt")
+	actual, _ := FromString("RuSt")
 
-	assert.Equal(t, expected, actual.Bytes(), "Should be equal")
+	assert.Equal(t, expected, actual.Bytes, "Should be equal")
 }
 
 func TestChunkTypeIsCritical(t *testing.T) {
-	chunk, _ := ChunkTypeFromString("RuSt")
-	assert.True(t, chunk.IsCritical(), "isCritical() should be true")
+	chunk, _ := FromString("RuSt")
+	assert.True(t, chunk.Critical, "isCritical() should be true")
 }
 
 func TestChunkTypeIsNotCritical(t *testing.T) {
-	chunk, _ := ChunkTypeFromString("ruSt")
-	assert.False(t, chunk.IsCritical(), "isCritical() should be false")
+	chunk, _ := FromString("ruSt")
+	assert.False(t, chunk.Critical, "isCritical() should be false")
 }
 
 func TestChunkTypeIsPublic(t *testing.T) {
-	chunk, _ := ChunkTypeFromString("RUSt")
-	assert.True(t, chunk.IsPublic(), "isPublic() should be true")
+	chunk, _ := FromString("RUSt")
+	assert.True(t, chunk.Public, "isPublic() should be true")
 }
 
 func TestChunkTypeIsNotPublic(t *testing.T) {
-	chunk, _ := ChunkTypeFromString("RuSt")
-	assert.False(t, chunk.IsPublic(), "isPublic() should be false")
+	chunk, _ := FromString("RuSt")
+	assert.False(t, chunk.Public, "isPublic() should be false")
 }
 
 func TestChunkTypeIsReservedBitValid(t *testing.T) {
-	chunk, _ := ChunkTypeFromString("RUSt")
+	chunk, _ := FromString("RUSt")
 	assert.True(t,
-		chunk.IsReservedBitValid(),
-		"isReservedBitValid() should be true",
+		chunk.ReservedBitValid,
+		"ReservedBitValid should be true",
 	)
 }
 
 func TestChunkTypeIsNotReservedBitValid(t *testing.T) {
-	chunk, _ := ChunkTypeFromString("Rust")
+	chunk, _ := FromString("Rust")
 	assert.False(t,
-		chunk.IsReservedBitValid(),
+		chunk.ReservedBitValid,
 		"isReservedBitValid() should be false",
 	)
 }
 
 func TestChunkTypeIsSafeToCopy(t *testing.T) {
-	chunk, _ := ChunkTypeFromString("RUSt")
-	assert.True(t, chunk.IsSafeToCopy(), "isSafeToCopy() should be true")
+	chunk, _ := FromString("RUSt")
+	assert.True(t, chunk.SafeToCopy, "isSafeToCopy() should be true")
 }
 
 func TestChunkTypeIsUnsafeToCopy(t *testing.T) {
-	chunk, _ := ChunkTypeFromString("RuST")
-	assert.False(t, chunk.IsSafeToCopy(), "isSafeToCopy() should be false")
+	chunk, _ := FromString("RuST")
+	assert.False(t, chunk.SafeToCopy, "isSafeToCopy() should be false")
 }
 
 func TestValidChunkTypeIsValid(t *testing.T) {
-	chunk, _ := ChunkTypeFromString("RUSt")
-	assert.True(t, chunk.IsValid(), "isValid() should be true")
+	chunk, _ := FromString("RUSt")
+	assert.True(t, chunk.Valid, "isValid() should be true")
 }
 
 func TestInvalidChunkTypeIsNotValid(t *testing.T) {
-	chunk, err := ChunkTypeFromString("Ru1t")
-	assert.False(t, chunk.IsValid(), "isValid() should be false")
+	chunk, err := FromString("Ru1t")
+	assert.False(t, chunk.Valid, "isValid() should be false")
 	assert.NotNil(t, err, "err should be not nil")
 }
 
 func TestChunkTypeToString(t *testing.T) {
-	chunk, _ := ChunkTypeFromString("RuSt")
-	assert.Equal(t, "RuSt", chunk.toString(), "String should be \"RuSt\"")
+	chunk, _ := FromString("RuSt")
+	assert.Equal(t, "RuSt", chunk.ToString(), "String should be \"RuSt\"")
 }
 
 func TestChunkEqual(t *testing.T) {
-	chunk1, _ := ChunkTypeFromString("RuSt")
-	chunk2, _ := ChunkTypeFromString("RuSt")
-	chunk3, _ := ChunkTypeFromString("RUSt")
+	chunk1, _ := FromString("RuSt")
+	chunk2, _ := FromString("RuSt")
+	chunk3, _ := FromString("RUSt")
 
 	assert.Equal(t, chunk1, chunk2, "chunk1 and chunk2 should be equal")
 	assert.NotEqual(t, chunk1, chunk3, "chunk1 and chunk2 should not be equal")
