@@ -94,3 +94,14 @@ func FromBytes(data []byte) (*Chunk, error) {
 
 	return &newChunk, nil
 }
+
+func FromStrings(typeString string, dataString string) (*Chunk, error) {
+	chunkType, err := chunk_type.FromString(typeString)
+	if err != nil {
+		return nil, err
+	}
+
+	newChunk := New(chunkType, []byte(dataString))
+
+	return &newChunk, nil
+}

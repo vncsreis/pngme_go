@@ -1,6 +1,7 @@
 package png_test
 
 import (
+	"os"
 	"pngme/chunk_type"
 	"pngme/chunks"
 	"pngme/png"
@@ -8,6 +9,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 )
+
+const PNG_PATH string = "../tux_png.png"
 
 func createTestingChunks() []chunks.Chunk {
 
@@ -109,4 +112,77 @@ func TestInvalidChunk(t *testing.T) {
 
 	assert.NotNil(t, err, "err should be not nil")
 	assert.Nil(t, newPng, "newPng should be nil")
+}
+
+func TestListChunks(t *testing.T) {
+	testPng := createTestingPng()
+	pngChunks := testPng.Chunks
+
+	assert.Equal(t, 3, len(pngChunks), "Chunk list len should be 3")
+}
+
+func TestChunkByType(t *testing.T) {
+	testPng := createTestingPng()
+	testChunk := testPng.GetChunkByType("FrSt")
+
+	assert.NotNil(t, testChunk, "testChunk should not be nil")
+	assert.Equal(t,
+		"I am the first chunk",
+		testChunk.DataAsString(),
+		"testChunk data string should be \"I am the first chunk\"",
+	)
+}
+
+func TestAppendChunk(t *testing.T) {
+	testPng := createTestingPng()
+	newChunk, _ := chunks.FromStrings("TeSt", "Message")
+	testPng.AppendChunk(*newChunk)
+	foundChunk := testPng.GetChunkByType("TeSt")
+
+	assert.NotNil(t, foundChunk, "foundChunk should not be nil")
+	assert.Equal(t,
+		4,
+		len(testPng.Chunks),
+		"testPng Chunk len should be 4",
+	)
+	assert.Equal(t,
+		"TeSt",
+		foundChunk.Type.AsString(),
+		"foundChunk type should be \"TeSt\"",
+	)
+	assert.Equal(t,
+		"Message",
+		foundChunk.DataAsString(),
+		"foundChunk data should be \"Message\"",
+	)
+
+}
+
+func TestRemoveChunk(t *testing.T) {
+	testPng := createTestingPng()
+	testChunk, _ := chunks.FromStrings("TeSt", "Message")
+	testPng.AppendChunk(*testChunk)
+
+	err := testPng.RemoveChunk("TeSt")
+	assert.Nil(t, err, "err should be nil")
+
+	foundChunk := testPng.GetChunkByType("TeSt")
+	assert.Nil(t, foundChunk, "foundChunk should be nil")
+
+}
+
+func TestFromPath(t *testing.T) {
+	testPng, err := png.FromPath(PNG_PATH)
+
+	assert.Nil(t, err, "err should be nil")
+	assert.NotNil(t, testPng, "testPng should not be nil")
+}
+
+func TestAsBytes(t *testing.T) {
+	testPng, _ := png.FromPath(PNG_PATH)
+	actual, _ := os.ReadFile(PNG_PATH)
+
+	expected := testPng.AsBytes()
+
+	assert.Equal(t, expected, actual, "expected and actual should be equal")
 }

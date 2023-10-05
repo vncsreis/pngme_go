@@ -25,7 +25,7 @@ type ChunkType struct {
 	SafeToCopy       bool
 }
 
-func (c *ChunkType) ToString() string {
+func (c *ChunkType) AsString() string {
 	str := ""
 
 	for _, char := range c.Bytes {

@@ -1,5 +1,9 @@
 package main
 
+import (
+	"pngme/cmd"
+)
+
 func main() {
-	print("hello world")
+	cmd.Execute()
 }

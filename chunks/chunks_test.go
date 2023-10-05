@@ -55,7 +55,7 @@ func TestChunkLenght(t *testing.T) {
 
 func TestChunkType(t *testing.T) {
 	chunk, _ := CreateTestChunk()
-	assert.Equal(t, "RuSt", chunk.Type.ToString(), "Chunk type should be \"RuSt\"")
+	assert.Equal(t, "RuSt", chunk.Type.AsString(), "Chunk type should be \"RuSt\"")
 }
 
 func TestChunkString(t *testing.T) {
@@ -73,6 +73,22 @@ func TestChunkString(t *testing.T) {
 func TestChunkCrc(t *testing.T) {
 	chunk, _ := CreateTestChunk()
 	assert.Equal(t, 2882656334, chunk.Crc, "Chunk Crc should be 2882656334")
+}
+
+func TestChunkFromStrings(t *testing.T) {
+	chunk, err := chunks.FromStrings("TeSt", "Message")
+	assert.Nil(t, err, "err should be nil")
+	assert.Equal(t,
+		"TeSt",
+		chunk.Type.AsString(),
+		"chunk type should be \"TeSt\"",
+	)
+	assert.Equal(t,
+		"Message",
+		chunk.DataAsString(),
+		"chunk data should be \"Message\"",
+	)
+
 }
 
 func TestValidChunkFromBytes(t *testing.T) {
@@ -102,7 +118,7 @@ func TestValidChunkFromBytes(t *testing.T) {
 	expectedChunkString := "This is where your secret message will be!"
 
 	assert.Equal(t, 42, chunk.Len, "Chunk length should be 42")
-	assert.Equal(t, "RuSt", chunk.Type.ToString(), "Chunk type should be \"RuSt\"")
+	assert.Equal(t, "RuSt", chunk.Type.AsString(), "Chunk type should be \"RuSt\"")
 	assert.Equal(t, expectedChunkString, chunkString, fmt.Sprintf("Chunk message should be \"%s\"", expectedChunkString))
 	assert.Equal(t, crc, chunk.Crc, fmt.Sprintf("Chunk Crc should be %d", crc))
 }

@@ -3,6 +3,8 @@ package png
 import (
 	"encoding/binary"
 	"errors"
+	"fmt"
+	"os"
 	"pngme/chunks"
 )
 
@@ -11,6 +13,44 @@ var STANDARD_HEADER [8]byte = [8]byte{137, 80, 78, 71, 13, 10, 26, 10}
 type Png struct {
 	Header [8]byte
 	Chunks []chunks.Chunk
+}
+
+func (p *Png) GetChunkByType(typeName string) *chunks.Chunk {
+	for _, chunk := range p.Chunks {
+		if chunk.Type.AsString() == typeName {
+			return &chunk
+		}
+	}
+
+	return nil
+}
+
+func (p *Png) AppendChunk(chunk chunks.Chunk) {
+	p.Chunks = append(p.Chunks, chunk)
+}
+
+func (p *Png) RemoveChunk(chunkType string) error {
+	for i, chunk := range p.Chunks {
+		if chunk.Type.AsString() == chunkType {
+			p.Chunks = append(p.Chunks[:i], p.Chunks[i+1:]...)
+			return nil
+
+		}
+	}
+
+	return errors.New(fmt.Sprintf("Chunk with type %s not found", chunkType))
+}
+
+func (p *Png) AsBytes() []byte {
+	totalBytes := []byte{}
+
+	totalBytes = append(totalBytes, p.Header[:]...)
+
+	for _, chunk := range p.Chunks {
+		totalBytes = append(totalBytes, chunk.AsBytes()...)
+	}
+
+	return totalBytes
 }
 
 func FromChunks(chunks []chunks.Chunk) Png {
@@ -53,4 +93,13 @@ func FromBytes(bytes []byte) (*Png, error) {
 
 	return &png, nil
 
+}
+
+func FromPath(path string) (*Png, error) {
+	fileBytes, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return FromBytes(fileBytes)
 }

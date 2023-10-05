@@ -81,7 +81,7 @@ func TestInvalidChunkTypeIsNotValid(t *testing.T) {
 
 func TestChunkTypeToString(t *testing.T) {
 	chunk, _ := FromString("RuSt")
-	assert.Equal(t, "RuSt", chunk.ToString(), "String should be \"RuSt\"")
+	assert.Equal(t, "RuSt", chunk.AsString(), "String should be \"RuSt\"")
 }
 
 func TestChunkEqual(t *testing.T) {
