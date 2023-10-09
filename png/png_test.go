@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const PNG_PATH string = "../tux_png.png"
+var PNG_PATH string = os.Getenv("PNG_TEST_FILE_PATH")
 
 func createTestingChunks() []chunks.Chunk {
 
@@ -172,6 +172,12 @@ func TestRemoveChunk(t *testing.T) {
 }
 
 func TestFromPath(t *testing.T) {
+	if PNG_PATH == "" {
+		t.Skip(
+			"PNG_TEST_FILE_PATH environment variable not set.Skipping test.",
+		)
+	}
+
 	testPng, err := png.FromPath(PNG_PATH)
 
 	assert.Nil(t, err, "err should be nil")
@@ -179,6 +185,12 @@ func TestFromPath(t *testing.T) {
 }
 
 func TestAsBytes(t *testing.T) {
+	if PNG_PATH == "" {
+		t.Skip(
+			"PNG_TEST_FILE_PATH environment variable not set.Skipping test.",
+		)
+	}
+
 	testPng, _ := png.FromPath(PNG_PATH)
 	actual, _ := os.ReadFile(PNG_PATH)
 
