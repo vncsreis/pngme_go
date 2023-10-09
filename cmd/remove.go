@@ -9,9 +9,10 @@ import (
 )
 
 var removeCmd = &cobra.Command{
-	Use:  "remove",
-	Args: cobra.ExactArgs(2),
-	Run:  remove,
+	Use:   "remove",
+	Short: "Remove message of specified type from PNG file",
+	Args:  cobra.ExactArgs(2),
+	Run:   remove,
 }
 
 func init() {
@@ -24,7 +25,7 @@ func remove(cmd *cobra.Command, args []string) {
 
 	pngFile, err := png.FromPath(filePath)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error opening file %s: %s", filePath, err)
+		fmt.Fprintf(os.Stderr, "Error: Error opening file %s: %s", filePath, err)
 		os.Exit(1)
 	}
 
@@ -32,7 +33,7 @@ func remove(cmd *cobra.Command, args []string) {
 	if err != nil {
 		fmt.Fprintf(
 			os.Stderr,
-			"Error removing chunk with type %s: %s",
+			"Error: Error removing chunk with type %s: %s",
 			filePath,
 			err,
 		)
@@ -44,7 +45,7 @@ func remove(cmd *cobra.Command, args []string) {
 	if err != nil {
 		fmt.Fprintf(
 			os.Stderr,
-			"Error overwriting file: %s",
+			"Error: Error overwriting file: %s",
 			err,
 		)
 		os.Exit(1)

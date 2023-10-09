@@ -9,9 +9,10 @@ import (
 )
 
 var decodeCmd = &cobra.Command{
-	Use:  "decode",
-	Args: cobra.ExactArgs(2),
-	Run:  decode,
+	Use:   "decode",
+	Short: "Gets message of specified type from PNG file",
+	Args:  cobra.ExactArgs(2),
+	Run:   decode,
 }
 
 func init() {
@@ -26,7 +27,7 @@ func decode(cmd *cobra.Command, args []string) {
 	if err != nil {
 		fmt.Fprintf(
 			os.Stderr,
-			"Error opening file %s: %s",
+			"Error: Error opening file %s: %s",
 			filePath,
 			err,
 		)

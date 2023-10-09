@@ -12,13 +12,14 @@ import (
 var output string
 
 var encodeCmd = &cobra.Command{
-	Use:  "encode",
-	Args: cobra.ExactArgs(3),
-	Run:  encode,
+	Use:   "encode",
+	Short: "Insert message with specified type into PNG file",
+	Args:  cobra.ExactArgs(3),
+	Run:   encode,
 }
 
 func init() {
-	encodeCmd.Flags().StringVarP(&output, "output", "o", "", "Output file (if empty program will overwrite file)")
+	encodeCmd.Flags().StringVarP(&output, "output", "o", "", "output file (if empty program will overwrite file)")
 	rootCmd.AddCommand(encodeCmd)
 }
 
@@ -29,13 +30,13 @@ func encode(cmd *cobra.Command, args []string) {
 
 	pngFile, err := png.FromPath(filePath)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error opening file %s: %s\n", filePath, err)
+		fmt.Fprintf(os.Stderr, "Error: Error opening file %s: %s\n", filePath, err)
 		os.Exit(1)
 	}
 
 	newChunk, err := chunks.FromStrings(typeString, message)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error creating new chunk: %s\n", err)
+		fmt.Fprintf(os.Stderr, "Error: Error creating new chunk: %s\n", err)
 		os.Exit(1)
 	}
 
