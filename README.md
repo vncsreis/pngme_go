@@ -6,4 +6,4 @@ Based on the [Rust tutorial](https://picklenerd.github.io/pngme_book/)
 
 ![Portugês](https://raw.githubusercontent.com/stevenrskelton/flag-icon/master/png/16/country-4x3/br.png "Brazil")
 Um programa simples para codificação e decodificação de messagens em arquivos PNG.
-Baseado no [Tutorial em Rust](https://picklenerd.github.io/pngme_book/)
+Baseado no [tutorial em Rust](https://picklenerd.github.io/pngme_book/)
